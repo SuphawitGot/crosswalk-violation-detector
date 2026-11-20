@@ -1,4 +1,4 @@
-# CV-Webapplication
+# Crosswalk Violation Detector
 
 ### AI-Assisted Zebra Crossing Monitoring
 
@@ -45,7 +45,7 @@ Developed by **Suphawit Sudsang**, Computer Engineering, Rangsit University.
 ## Repository Structure
 
 ```text
-CV-Webapplication/
+crosswalk-violation-detector/
 ├── docker-compose.yml
 ├── README.md
 ├── yolo26n.pt
@@ -104,8 +104,8 @@ The Python dependency file pins CUDA 12.4 builds of PyTorch and torchvision. Dep
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/SuphawitGot/CV-Webapplication.git
-cd CV-Webapplication
+git clone https://github.com/SuphawitGot/crosswalk-violation-detector.git
+cd crosswalk-violation-detector
 ```
 
 ### 2. Start PostgreSQL
@@ -205,7 +205,6 @@ The repository also contains `/auth/`, `/auth/all-users`, and `/auth/admin` rout
 ## Current Limitations
 
 - **Missing model weights:** Crosswalk and plate detection require `best.pt` and `LC.pt`, which are not committed.
-- **Capture directory mismatch:** The detector writes images to `Web/BackEnd/ML/captures`, while `/captures` serves `Web/BackEnd/captures`. Align these paths to make dashboard thumbnails accessible.
 - **Session-only capture feed:** `/violations` reads an in-memory list that resets when detection starts. It does not retrieve historical records from PostgreSQL.
 - **OCR startup timing:** Captures processed before EasyOCR finishes loading can remain at `Reading…` and skip the database write.
 - **Shared processing state:** The backend uses one global video session and a global capture cooldown across vehicles. Independent concurrent sessions are not implemented.
@@ -216,7 +215,7 @@ The repository also contains `/auth/`, `/auth/all-users`, and `/auth/admin` rout
 
 **Suphawit Sudsang**  
 Computer Engineering, Rangsit University  
-[GitHub](https://github.com/SuphawitGot) · [Repository](https://github.com/SuphawitGot/CV-Webapplication)
+[GitHub](https://github.com/SuphawitGot) · [Repository](https://github.com/SuphawitGot/crosswalk-violation-detector)
 
 ## License
 

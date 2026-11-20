@@ -103,7 +103,7 @@ export default function AdminPage() {
 
         {/* Title */}
         <h1 className="text-zinc-100 text-3xl font-light tracking-widest uppercase mb-10 text-center">
-          Admin — Detection Dashboard
+          Crosswalk Violation Detector
         </h1>
 
         <div className="flex gap-6 items-start">
