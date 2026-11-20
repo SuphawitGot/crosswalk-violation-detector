@@ -32,7 +32,6 @@ services:
       # Persist uploaded videos and captured violation screenshots
       - backend_uploads:/app/uploads
       - backend_captures:/app/captures
-      - ml_captures:/app/ML/captures
     depends_on:
       db:
         condition: service_healthy
@@ -55,4 +54,3 @@ volumes:
   postgres_data:
   backend_uploads:
   backend_captures:
-  ml_captures:

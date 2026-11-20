@@ -34,7 +34,7 @@ RUN uv pip install --system --no-cache \
 COPY . .
 
 # Create directories for uploads and captures
-RUN mkdir -p /app/uploads /app/captures /app/ML/captures
+RUN mkdir -p /app/uploads /app/captures
 
 # Expose the FastAPI port
 EXPOSE 8000
