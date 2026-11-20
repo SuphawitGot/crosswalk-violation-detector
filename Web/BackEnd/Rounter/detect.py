@@ -41,7 +41,7 @@ import cv2
 import queue
 import threading
 import time
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Request
 from fastapi.responses import StreamingResponse
 
 import Detector
@@ -208,26 +208,42 @@ def _detector_thread(stop: threading.Event):
 
 
 # ── MJPEG Stream Generator & Thread Controller ────────────────────────────────
-def _frame_generator():
+def _wait_for_frame(my_run: int, last_seq: int):
+    """
+    Sleep (at most 0.5 s) until a frame newer than `last_seq` is published.
+    Returns (finished, jpeg_bytes or None, seq).
+
+    The wait condition requires an actual frame (_latest_jpeg is not None). Without that, right after a
+    new run starts the condition is already true while there is nothing to send, and the stream loop
+    spins at 100% CPU holding the GIL, starving the detector thread and the web server.
+    """
+    with _frame_cond:
+        _frame_cond.wait_for(
+            lambda: (_latest_jpeg is not None and _frame_seq != last_seq)
+                    or _run_id != my_run or not _running(),
+            timeout=0.5,
+        )
+        finished = _run_id != my_run or not _running()
+        if _latest_jpeg is None or _frame_seq == last_seq:
+            return finished, None, last_seq
+        return finished, _latest_jpeg, _frame_seq
+
+
+async def _frame_generator(request: Request):
     """
     Yield every new annotated frame to one browser connection.
-    Ends when detection stops or a new run (new upload) starts.
+    Ends when the browser disconnects, detection stops, or a new run (new upload) starts.
     """
     my_run = _run_id
     last_seq = -1
 
-    while True:
-        with _frame_cond:
-            _frame_cond.wait_for(
-                lambda: _frame_seq != last_seq or _run_id != my_run or not _running(),
-                timeout=0.5,
-            )
-            finished = _run_id != my_run or not _running()
-            jpeg_bytes, seq = _latest_jpeg, _frame_seq
-
+    # Checking for a disconnect matters: the server doesn't stop a stream by itself when the
+    # browser tab closes, so without this every closed tab kept a stream running until /stop.
+    while not await request.is_disconnected():
+        finished, jpeg_bytes, seq = await asyncio.to_thread(_wait_for_frame, my_run, last_seq)
         if finished:
             break
-        if jpeg_bytes is None or seq == last_seq:
+        if jpeg_bytes is None:
             continue
         last_seq = seq
 
@@ -369,12 +385,12 @@ async def resume_detection():
 
 
 @router.get("/stream")
-def stream_video():
+def stream_video(request: Request):
     """
     Stream annotated JPEG frames continuously to the browser using HTTP MJPEG format.
     """
     return StreamingResponse(
-        _frame_generator(),
+        _frame_generator(request),
         media_type="multipart/x-mixed-replace; boundary=frame",
         headers={
             "Cache-Control": "no-cache, no-store, must-revalidate",
